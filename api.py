@@ -1,5 +1,5 @@
 from fastapi import FastAPI, HTTPException, Body
-import processingdata as prsdt
+from processingdata import PDFsProcess
 import summary as sum
 import json
 import os
@@ -20,7 +20,7 @@ async def summarize_pdf(source: str = Body(..., embed=True)):
             raise HTTPException(status_code=400, detail="Thiếu trường 'source' trong nội dung yêu cầu.")
 
         # Xử lý input là URL hoặc đường dẫn cục bộ
-        data_obj = prsdt.data(source)
+        data_obj = PDFsProcess(source)
 
         tt1, tt2 = data_obj.load_pdf()
         if tt1 and tt2:

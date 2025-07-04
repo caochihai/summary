@@ -5,3 +5,4 @@ pdfplumber==0.11.7
 transformers==4.53.0
 tokenizers==0.21.2
 torch==2.7.1
+fuzzywuzzy

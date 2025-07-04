@@ -5,7 +5,7 @@ import os
 import unicodedata
 import mimetypes
 
-class data:
+class PDFsProcess:
     def __init__(self,file_path):
         self.pdf_path = file_path
         self._vietnamese_pattern = r'[àáảãạăắằẳẵặâấầẩẫậđèéẻẽẹêếềểễệìíỉĩịòóỏõọôốồổỗộơớờởỡợùúủũụưứừửữựỳýỷỹỵ]'
