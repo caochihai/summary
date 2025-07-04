@@ -1,37 +1,39 @@
 from fastapi import FastAPI, HTTPException, Body
-from fastapi.responses import JSONResponse
 import processingdata as prsdt
 import summary as sum
 import json
+import os
+import re
 
 app = FastAPI()
 app.config = {"JSON_AS_ASCII": False}
 
 model = sum.Summary()
 
-@app.post("/summarize_pdf")
-async def summarize_pdf(pdf_path: str = Body(...)):
-    try:
-        # Kiểm tra đầu vào
-        if not pdf_path:
-            raise HTTPException(status_code=400, detail="Thiếu trường 'pdf_path' trong nội dung yêu cầu.")
+def is_url(string: str) -> bool:
+    return re.match(r'^https?://', string.strip()) is not None
 
-        data_obj = prsdt.data(pdf_path)
+@app.post("/summarize_pdf")
+async def summarize_pdf(source: str = Body(..., embed=True)):
+    try:
+        if not source:
+            raise HTTPException(status_code=400, detail="Thiếu trường 'source' trong nội dung yêu cầu.")
+
+        # Xử lý input là URL hoặc đường dẫn cục bộ
+        data_obj = prsdt.data(source)
+
         tt1, tt2 = data_obj.load_pdf()
         if tt1 and tt2:
             dt = data_obj.read_text()
             summary = model.summary_content(dt)
 
-            return JSONResponse(
-                content={"summary": summary},
-                media_type="application/json; charset=utf-8"
-            )
+            return {"response": summary}
 
         elif not tt1 and not tt2:
             raise HTTPException(
                 status_code=400,
-                detail=f"Tệp PDF '{pdf_path}' không tồn tại hoặc không thể truy cập. "
-                       f"Vui lòng kiểm tra lại đường dẫn hoặc quyền truy cập của tệp."
+                detail=f"Tệp PDF từ '{source}' không tồn tại hoặc không thể truy cập. "
+                       f"Vui lòng kiểm tra lại đường dẫn hoặc quyền truy cập."
             )
 
         else:
@@ -39,8 +41,8 @@ async def summarize_pdf(pdf_path: str = Body(...)):
                 status_code=400,
                 detail=(
                     "Tệp PDF có thể là file scan ảnh hoặc tài liệu bằng ngôn ngữ không hỗ trợ. "
-                    "Hiện hệ thống chỉ xử lý các file PDF có nội dung văn bản có thể sao chép được. "
-                    "Vui lòng kiểm tra lại file và đảm bảo định dạng phù hợp."
+                    "Hệ thống chỉ xử lý file PDF có nội dung văn bản có thể sao chép được. "
+                    "Vui lòng kiểm tra định dạng file."
                 )
             )
 
